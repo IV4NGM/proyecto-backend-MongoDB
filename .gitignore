@@ -1,29 +1,45 @@
+# env files
+.env
+.env.local
+.env.*.local
+
+# npm
+node_modules
+package-lock.json
+*.gz
+
 # Logs
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
+# Optional eslint cache
+.eslintcache
+
+# production
+build
 dist
-dist-ssr
-*.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# OS X
+.DS_Store*
+Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+*~
+
+# Coveralls
+coverage
+
+# Benchmarking
+benchmarks/graphs
 
 jsconfig.json
-
-.netlify
-netlify.toml
