@@ -1,14 +1,15 @@
 const express = require('express')
 require('colors')
 require('dotenv').config()
-// const connectDB = require('./config/db')
-const { errorHandler } = require('@/middleware/errorMiddleware')
-const cors = require('cors')
 
 const path = require('path')
 require('module-alias/register')
 const aliasPath = path.join(__dirname, './')
 require('module-alias').addAlias('@', aliasPath)
+
+// const connectDB = require('./config/db')
+const { errorHandler } = require('@/middleware/errorMiddleware')
+const cors = require('cors')
 
 const usersRoutes = require('@/routes/usersRoutes')
 const productsRoutes = require('@/routes/productsRoutes')
