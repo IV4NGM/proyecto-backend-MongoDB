@@ -1,5 +1,7 @@
 const asyncHandler = require('express-async-handler')
 
+const Sale = require('@/models/salesModel')
+
 const createSale = asyncHandler(async (req, res) => {
   res.status(201).json({ message: 'Crear venta' })
 })
