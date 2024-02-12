@@ -133,7 +133,7 @@ const updateUser = asyncHandler(async (req, res) => {
   const { name, password, isAdmin, logout } = req.body
   if (!name && !password && !isAdmin) {
     res.status(400)
-    throw new Error('Debe enviar al menos un campo a actualizar')
+    throw new Error('Debes enviar al menos un campo a actualizar')
   }
   let newPassword
   if (password) {
