@@ -15,17 +15,19 @@ const protect = asyncHandler(async (req, res, next) => {
       // Obtenemos los datos del token a través del payload, y traemos todos los datos de la DB excepto el password y tokenVersion
       const user = await User.findById(decoded.user_id).select('-password')
       if (!user || !user.isActive) {
+        res.status(401)
         throw new Error('El usuario no existe')
       }
       if (user.tokenVersion !== decoded.token_version) {
+        res.status(401)
         throw new Error('Acceso no autorizado')
       }
       req.user = user
       next()
     } catch (error) {
       // console.log(error)
-      res.status(401)
-      throw new Error('Acceso no autorizado')
+      res.status(res.statusCode || 401)
+      throw new Error(error.message || 'Acceso no autorizado')
     }
   }
 
