@@ -26,7 +26,7 @@ const protect = asyncHandler(async (req, res, next) => {
       next()
     } catch (error) {
       // console.log(error)
-      res.status(res.statusCode || 401)
+      res.status(401)
       throw new Error(error.message || 'Acceso no autorizado')
     }
   }
