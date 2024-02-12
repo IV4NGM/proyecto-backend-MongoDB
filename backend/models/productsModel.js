@@ -11,10 +11,12 @@ const productSchema = mongoose.Schema({
     min: [0, 'El precio  no puede ser negativo']
   },
   description: {
-    type: String
+    type: String,
+    default: ''
   },
   sku: {
-    type: String
+    type: String,
+    default: ''
   },
   isActive: {
     type: Boolean,
