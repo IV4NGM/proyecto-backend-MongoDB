@@ -119,6 +119,16 @@ const getUser = asyncHandler(async (req, res) => {
   res.status(200).json(user)
 })
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({ isActive: true }).select('-password -isActive -tokenVersion')
+  if (users) {
+    res.status(200).json(users)
+  } else {
+    res.status(400)
+    throw new Error('No se puede mostrar la información en este momento')
+  }
+})
+
 const updateUser = asyncHandler(async (req, res) => {
   const { name, password, isAdmin, logout } = req.body
   if (!name && !password && !isAdmin) {
@@ -196,6 +206,7 @@ module.exports = {
   createUser,
   loginUser,
   getUser,
+  getAllUsers,
   updateUser,
   deleteUser
 }
