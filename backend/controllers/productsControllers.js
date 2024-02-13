@@ -6,7 +6,7 @@ const createProduct = asyncHandler(async (req, res) => {
   const { name, price, description, sku } = req.body
   if (!name || !price) {
     res.status(400)
-    throw new Error('Debes ingresar el nombre y precio')
+    throw new Error('Debes ingresar todos los campos')
   }
   const priceToSet = Number(price)
   if (isNaN(priceToSet) || !isFinite(priceToSet) || priceToSet <= 0) {
@@ -41,15 +41,15 @@ const getProduct = asyncHandler(async (req, res) => {
       })
     } else {
       res.status(404)
-      throw new Error('Este producto no existe')
+      throw new Error('El producto no se encuentra en la base de datos')
     }
   } catch (error) {
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
       res.status(404)
-      throw new Error('Este producto no existe')
+      throw new Error('El producto no se encuentra en la base de datos')
     } else {
       res.status(res.statusCode || 404)
-      throw new Error(error.message || 'Este producto no existe')
+      throw new Error(error.message || 'El producto no se encuentra en la base de datos')
     }
   }
 })
@@ -70,19 +70,26 @@ const updateProduct = asyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Debes enviar al menos un campo a actualizar')
   }
+
+  if (name === '') {
+    res.status(400)
+    throw new Error('El nombre no debe ser vacío')
+  }
+
+  let priceToSet
+  if (price) {
+    priceToSet = Number(price)
+    if (isNaN(priceToSet) || !isFinite(priceToSet) || priceToSet <= 0) {
+      res.status(400)
+      throw new Error('El precio debe ser un número positivo')
+    }
+  }
+
   try {
     const product = await Product.findById(req.params.id)
     if (!product || !product.isActive) {
       res.status(404)
-      throw new Error('Este producto no existe')
-    }
-    let priceToSet = product.price
-    if (price) {
-      priceToSet = Number(price)
-      if (isNaN(priceToSet) || !isFinite(priceToSet) || priceToSet <= 0) {
-        res.status(400)
-        throw new Error('El precio debe ser un número positivo')
-      }
+      throw new Error('El producto no se encuentra en la base de datos')
     }
 
     const productUpdated = await Product.findOneAndUpdate(product, {
@@ -106,7 +113,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   } catch (error) {
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
       res.status(404)
-      throw new Error('Este producto no existe')
+      throw new Error('El producto no se encuentra en la base de datos')
     } else {
       res.status(res.statusCode || 400)
       throw new Error(error.message || 'No se ha podido actualizar el producto')
@@ -119,22 +126,22 @@ const deleteProduct = asyncHandler(async (req, res) => {
     const product = await Product.findById(req.params.id)
     if (!product || !product.isActive) {
       res.status(404)
-      throw new Error('Este producto no existe')
+      throw new Error('El producto no se encuentra en la base de datos')
     }
     const productDeleted = await Product.findOneAndUpdate(product, { isActive: false }, { new: true })
     if (productDeleted) {
       res.status(200).json({ message: 'Producto eliminado exitosamente' })
     } else {
       res.status(400)
-      throw new Error('No se pudo eliminar el producto')
+      throw new Error('No se ha podido eliminar el producto')
     }
   } catch (error) {
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
       res.status(404)
-      throw new Error('Este producto no existe')
+      throw new Error('El producto no se encuentra en la base de datos')
     } else {
       res.status(res.statusCode || 400)
-      throw new Error(error.message || 'No se pudo eliminar el producto')
+      throw new Error(error.message || 'No se ha podido eliminar el producto')
     }
   }
 })
