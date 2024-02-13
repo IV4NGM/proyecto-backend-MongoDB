@@ -191,7 +191,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: 'Usuario eliminado exitosamente' })
   } else {
     res.status(400)
-    throw new Error('No se pudo eliminar el usuario')
+    throw new Error('No se ha podido eliminar el usuario')
   }
 })
 

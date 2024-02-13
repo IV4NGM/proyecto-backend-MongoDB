@@ -78,7 +78,7 @@ const createSale = asyncHandler(async (req, res) => {
     res.status(201).json(cleanSale(sale))
   } else {
     res.status(400)
-    throw new Error('No se pudo crear la venta')
+    throw new Error('No se ha podido crear la venta')
   }
 })
 
