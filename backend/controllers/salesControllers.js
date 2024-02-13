@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler')
 
+const User = require('@/models/usersModel')
 const Product = require('@/models/productsModel')
 const Sale = require('@/models/salesModel')
 
@@ -84,12 +85,28 @@ const createSale = asyncHandler(async (req, res) => {
 
 const getSales = asyncHandler(async (req, res) => {
   const sales = await Sale.find({ user: req.user })
-  if (sales) {
-    res.status(200).json(sales.map(sale => cleanSale(sale)))
-  } else {
+  if (!sales) {
     res.status(400)
     throw new Error('No se puede mostrar la información en este momento')
   }
+  const salesArray = sales.map(sale => cleanSale(sale))
+  let salesAmount = 0
+  let totalProductsAmount = 0
+  let totalSalesPrice = 0
+  salesArray.forEach(sale => {
+    salesAmount = salesAmount + 1
+    totalProductsAmount = totalProductsAmount + sale.products_amount
+    totalSalesPrice = totalSalesPrice + sale.total_price
+  })
+  res.status(200).json({
+    user: {
+      _id: req.user._id
+    },
+    sales_amount: salesAmount,
+    total_products_amount: totalProductsAmount,
+    total_sales_price: totalSalesPrice,
+    sales: salesArray
+  })
 })
 
 const getAllSales = asyncHandler(async (req, res) => {
@@ -102,8 +119,58 @@ const getAllSales = asyncHandler(async (req, res) => {
   }
 })
 
+const getSummary = asyncHandler(async (req, res) => {
+  // Obtenemos todos los usuarios
+  const users = await User.find({ isActive: true }).select('-password -isActive -tokenVersion')
+  if (!users) {
+    res.status(400)
+    throw new Error('No se puede mostrar la información en este momento')
+  }
+  let allSalesAmount = 0
+  let allTotalProductsAmount = 0
+  let allTotalSalesPrice = 0
+  const summary = {
+    all_sales_amount: allSalesAmount,
+    all_products_amount: allTotalProductsAmount,
+    all_sales_price: allTotalSalesPrice,
+    by_user: []
+  }
+  await Promise.all(users.map(async (user) => {
+    const sales = await Sale.find({ user })
+    if (!sales) {
+      res.status(400)
+      throw new Error('No se puede mostrar la información en este momento')
+    }
+    const salesArray = sales.map(sale => cleanSale(sale))
+    let salesAmount = 0
+    let totalProductsAmount = 0
+    let totalSalesPrice = 0
+    salesArray.forEach(sale => {
+      salesAmount = salesAmount + 1
+      totalProductsAmount = totalProductsAmount + sale.products_amount
+      totalSalesPrice = totalSalesPrice + sale.total_price
+    })
+    allSalesAmount = allSalesAmount + salesAmount
+    allTotalProductsAmount = allTotalProductsAmount + totalProductsAmount
+    allTotalSalesPrice = allTotalSalesPrice + totalSalesPrice
+    summary.by_user.push({
+      user: {
+        _id: req.user._id
+      },
+      sales_amount: salesAmount,
+      total_products_amount: totalProductsAmount,
+      total_sales_price: totalSalesPrice
+    })
+  }))
+  summary.all_sales_amount = allSalesAmount
+  summary.all_products_amount = allTotalProductsAmount
+  summary.all_sales_price = allTotalSalesPrice
+  res.status(200).json(summary)
+})
+
 module.exports = {
   createSale,
   getSales,
-  getAllSales
+  getAllSales,
+  getSummary
 }
