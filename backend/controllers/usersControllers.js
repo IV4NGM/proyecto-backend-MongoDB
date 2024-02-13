@@ -10,7 +10,7 @@ const createUser = asyncHandler(async (req, res) => {
   // Verificar si se pasan todos los datos
   if (!name || !email || !password) {
     res.status(400)
-    throw new Error('Por favor, ingresa todos los campos')
+    throw new Error('Debes ingresar todos los campos')
   }
   // Establecer la propiedad isAdmin
   const admin = !(!isAdmin || isAdmin !== 'true')
@@ -80,7 +80,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (!email || !password) {
     res.status(400)
-    throw new Error('Por favor, ingresa todos los campos')
+    throw new Error('Debes ingresar todos los campos')
   }
 
   // Verificamos si el usuario existe y también su password
