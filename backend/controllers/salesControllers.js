@@ -110,22 +110,44 @@ const getSales = asyncHandler(async (req, res) => {
 })
 
 const getAllSales = asyncHandler(async (req, res) => {
+  const { user_id: userId, min_amount: minAmount, max_amount: maxAmount, min_price: minPrice, max_price: maxPrice } = req.query
+
   const sales = await Sale.find()
-  if (sales) {
-    res.status(200).json(sales.map(sale => cleanSale(sale)))
-  } else {
+  if (!sales) {
     res.status(400)
     throw new Error('No se puede mostrar la información en este momento')
   }
+
+  // Filtrar la información por medio de los query params
+  let salesToDisplay = sales.map(sale => cleanSale(sale))
+
+  if (userId) {
+    salesToDisplay = salesToDisplay.filter(sale => sale.user._id.toString() === userId)
+  }
+  if (minAmount) {
+    salesToDisplay = salesToDisplay.filter(sale => sale.products_amount >= parseInt(minAmount))
+  }
+  if (maxAmount) {
+    salesToDisplay = salesToDisplay.filter(sale => sale.products_amount <= parseInt(maxAmount))
+  }
+  if (minPrice) {
+    salesToDisplay = salesToDisplay.filter(sale => sale.total_price >= parseFloat(minPrice))
+  }
+  if (maxPrice) {
+    salesToDisplay = salesToDisplay.filter(sale => sale.total_price <= parseFloat(maxPrice))
+  }
+
+  res.status(200).json(salesToDisplay)
 })
 
 const getSummary = asyncHandler(async (req, res) => {
-  // Obtenemos todos los usuarios
+  // Obtener todos los usuarios
   const users = await User.find({ isActive: true }).select('-password -isActive -tokenVersion')
   if (!users) {
     res.status(400)
     throw new Error('No se puede mostrar la información en este momento')
   }
+  // Crear un objeto para guardar la información de ventas por usuario
   let allSalesAmount = 0
   let allTotalProductsAmount = 0
   let allTotalSalesPrice = 0
@@ -135,13 +157,20 @@ const getSummary = asyncHandler(async (req, res) => {
     all_sales_price: allTotalSalesPrice,
     by_user: []
   }
-  await Promise.all(users.map(async (user) => {
-    const sales = await Sale.find({ user })
-    if (!sales) {
-      res.status(400)
-      throw new Error('No se puede mostrar la información en este momento')
-    }
-    const salesArray = sales.map(sale => cleanSale(sale))
+
+  // Obtener todas las ventas
+  const sales = await Sale.find()
+  if (!sales) {
+    res.status(400)
+    throw new Error('No se puede mostrar la información en este momento')
+  }
+
+  // Dar formato a las ventas
+  const salesCleaned = sales.map(sale => cleanSale(sale))
+
+  // Obtener la información de ventas por usuario
+  users.map(async (user) => {
+    const salesArray = salesCleaned.filter(sale => sale.user._id.toString() === user._id.toString())
     let salesAmount = 0
     let totalProductsAmount = 0
     let totalSalesPrice = 0
@@ -161,10 +190,12 @@ const getSummary = asyncHandler(async (req, res) => {
       total_products_amount: totalProductsAmount,
       total_sales_price: totalSalesPrice
     })
-  }))
+  })
+
   summary.all_sales_amount = allSalesAmount
   summary.all_products_amount = allTotalProductsAmount
   summary.all_sales_price = allTotalSalesPrice
+
   res.status(200).json(summary)
 })
 
