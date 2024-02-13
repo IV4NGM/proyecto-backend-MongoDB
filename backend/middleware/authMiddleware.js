@@ -16,7 +16,7 @@ const protect = asyncHandler(async (req, res, next) => {
       const user = await User.findById(decoded.user_id).select('-password')
       if (!user || !user.isActive) {
         res.status(401)
-        throw new Error('El usuario no existe')
+        throw new Error('El usuario no se encuentra en la base de datos')
       }
       if (user.tokenVersion !== decoded.token_version) {
         res.status(401)
