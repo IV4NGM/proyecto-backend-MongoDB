@@ -55,13 +55,28 @@ const getProduct = asyncHandler(async (req, res) => {
 })
 
 const getAllProducts = asyncHandler(async (req, res) => {
+  const { product_id: productId, min_price: minPrice, max_price: maxPrice } = req.query
+
   const products = await Product.find({ isActive: true }).select('-isActive')
-  if (products) {
-    res.status(200).json(products)
-  } else {
+  if (!products) {
     res.status(400)
     throw new Error('No se puede mostrar la información en este momento')
   }
+
+  // Filtrar la información por medio de los query params
+  let productsToDisplay = [...products]
+
+  if (productId) {
+    productsToDisplay = productsToDisplay.filter(product => product.id === productId)
+  }
+  if (minPrice) {
+    productsToDisplay = productsToDisplay.filter(product => Number(product.price) >= parseFloat(minPrice))
+  }
+  if (maxPrice) {
+    productsToDisplay = productsToDisplay.filter(product => Number(product.price) <= parseFloat(maxPrice))
+  }
+
+  res.status(200).json(productsToDisplay)
 })
 
 const updateProduct = asyncHandler(async (req, res) => {
