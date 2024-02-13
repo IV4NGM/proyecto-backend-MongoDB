@@ -12,22 +12,19 @@ const createUser = asyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Por favor, ingresa todos los campos')
   }
+  // Establecer la propiedad isAdmin
+  const admin = !(!isAdmin || isAdmin !== 'true')
+  // Hacer el Hash al password
+  const salt = await bcrypt.genSalt(10)
+  const hashedPassword = await bcrypt.hash(password, salt)
 
   // Verificar que el email no esté registrado
   const userExists = await User.findOne({ email })
   if (userExists) {
     if (userExists.isActive) {
       res.status(400)
-      throw new Error('Ese usuario ya existe en la base de datos')
+      throw new Error('El email ya está registrado en la base de datos')
     } else {
-      // Establecer la propiedad isAdmin
-      let admin = true
-      if (!isAdmin || isAdmin !== 'true') {
-        admin = false
-      }
-      // Hacer el Hash al password
-      const salt = await bcrypt.genSalt(10)
-      const hashedPassword = await bcrypt.hash(password, salt)
       const userUpdated = await User.findByIdAndUpdate(userExists.id, {
         name,
         email,
@@ -50,16 +47,6 @@ const createUser = asyncHandler(async (req, res) => {
       }
     }
   } else {
-    // Establecer la propiedad isAdmin
-    let admin = true
-    if (!isAdmin || isAdmin !== 'true') {
-      admin = false
-    }
-
-    // Hacer el Hash al password
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
     // Crear el usuario
     const userCreated = await User.create({
       name,
@@ -135,25 +122,31 @@ const updateUser = asyncHandler(async (req, res) => {
     res.status(400)
     throw new Error('Debes enviar al menos un campo a actualizar')
   }
-  let newPassword
-  if (password) {
-    // Hacer el Hash al password
-    const salt = await bcrypt.genSalt(10)
-    newPassword = await bcrypt.hash(password, salt)
+  if (name === '') {
+    res.status(400)
+    throw new Error('El nombre no debe ser vacío')
   }
-  const newName = name || req.user.name
   let newIsAdmin = req.user.isAdmin
   if (isAdmin) {
     if (isAdmin === 'true') {
       newIsAdmin = true
     } else if (isAdmin === 'false') {
       newIsAdmin = false
+    } else {
+      res.status(400)
+      throw new Error('El campo isAdmin no es válido')
     }
+  }
+  let newPassword
+  if (password) {
+    // Hacer el Hash al password
+    const salt = await bcrypt.genSalt(10)
+    newPassword = await bcrypt.hash(password, salt)
   }
   const newTokenVersion = logout === 'false' ? req.user.tokenVersion : req.user.tokenVersion + 1
   if (newPassword) {
     const userUpdated = await User.findByIdAndUpdate(req.user.id, {
-      name: newName,
+      name,
       password: newPassword,
       isAdmin: newIsAdmin,
       tokenVersion: newTokenVersion
@@ -171,7 +164,7 @@ const updateUser = asyncHandler(async (req, res) => {
     }
   } else {
     const userUpdated = await User.findByIdAndUpdate(req.user.id, {
-      name: newName,
+      name,
       isAdmin: newIsAdmin
     }, { new: true })
     if (userUpdated) {
